@@ -1,0 +1,8 @@
+# Phu thuoc chinh cho Voice-Clone Studio (Python 3.11).
+# torch / torchaudio KHONG o day — install.bat cai rieng tu index CUDA (cu124) hoac CPU.
+# Cac goi con lai se duoc f5-tts keo theo o dung phien ban.
+
+f5-tts==1.1.22
+faster-whisper==1.2.1
+huggingface_hub>=0.34
+soundfile>=0.13

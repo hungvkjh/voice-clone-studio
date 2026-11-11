@@ -1,9 +1,17 @@
-# Heavy / generated — do not commit
+# Moi truong Python (tao lai bang install.bat)
 .venv/
-models/
-output/
-*.log
 
-# Keep the bundled reference voices (voices/), but ignore noise
+# Trong so model nang (~5GB) - tai bang download_models.py
+models/**/*.pt
+models/**/*.safetensors
+models/**/*.bin
+
+# File audio da tao
+output/
+
+# Rac
+*.log
 __pycache__/
 *.pyc
+
+# GIU LAI (khong ignore): models/vivoice/vocab.txt, voices/*, web/*, *.py, *.bat

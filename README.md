@@ -11,6 +11,32 @@ việc clone giọng. Chạy hoàn toàn độc lập — đã kèm sẵn Python
 
 ---
 
+## Cài đặt (máy mới / cho người khác dùng)
+
+Repo không kèm sẵn môi trường Python và model nặng. Trên máy mới chỉ cần:
+
+```bat
+install.bat
+```
+
+Script sẽ tự: tạo venv **Python 3.11** → cài **torch + f5-tts** → **tải model ~5GB**.
+
+**Yêu cầu:**
+- Windows, có **ffmpeg** trong PATH — cài: `winget install Gyan.FFmpeg`
+- Một trong hai: **[uv](https://docs.astral.sh/uv/)** (khuyên dùng, tự tải Python 3.11) *hoặc* **Python 3.11** cài sẵn.
+- Máy có **GPU NVIDIA** → để mặc định (`cu124`). **Không có GPU** → chạy:
+  ```bat
+  set TORCH_VARIANT=cpu
+  install.bat
+  ```
+  (CPU chạy được nhưng chậm hơn nhiều.)
+
+Cài xong → `start.bat`. Nếu chỉ muốn tải lại model: `.venv\Scripts\python.exe download_models.py`.
+
+> Model tải từ HuggingFace `hynt/F5-TTS-Vietnamese-ViVoice` (`model_last.pt`). File `vocab.txt` đã nằm sẵn trong repo.
+
+---
+
 ## Chạy nhanh
 
 ```bat
@@ -86,8 +112,10 @@ Giọng (timbre) do **clip mẫu** quyết định — đổi giọng = đổi `
 | Thứ | Đường dẫn |
 |---|---|
 | Server + web UI | `server.py`, `web/index.html` |
-| Môi trường Python 3.11 (uv) | `.venv/` *(đã kèm, ~5.5GB)* |
-| Model + vocab | `models/vivoice/{model_last.pt, vocab.txt}` *(~5GB)* |
+| Cài đặt + tải model | `install.bat`, `download_models.py`, `requirements.txt` |
+| Môi trường Python 3.11 | `.venv/` *(install.bat tạo, ~5.5GB)* |
+| Model | `models/vivoice/model_last.pt` *(~5GB, download_models.py tải)* |
+| Vocab | `models/vivoice/vocab.txt` *(kèm repo, 11KB)* |
 | Giọng mẫu | `voices/<name>.wav` (+ `<name>.txt` lời thoại) |
 | File đã tạo | `output/` |
 
@@ -99,6 +127,8 @@ Giọng (timbre) do **clip mẫu** quyết định — đổi giọng = đổi `
 | `F5_DEVICE` | `cuda` | `cuda` \| `cpu` \| `auto` |
 | `F5_SPEED` | `0.9` | Tốc độ mặc định khi request không truyền |
 | `F5_CKPT` | `models/vivoice/model_last.pt` | Đường dẫn checkpoint |
+| `F5_REPO` | `hynt/F5-TTS-Vietnamese-ViVoice` | Repo HF để `download_models.py` tải |
+| `TORCH_VARIANT` | `cu124` | `cu124` (GPU) \| `cpu` — dùng khi chạy `install.bat` |
 
 ## Thêm giọng mẫu (không qua web)
 
