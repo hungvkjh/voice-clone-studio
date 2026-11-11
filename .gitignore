@@ -1,0 +1,9 @@
+# Heavy / generated — do not commit
+.venv/
+models/
+output/
+*.log
+
+# Keep the bundled reference voices (voices/), but ignore noise
+__pycache__/
+*.pyc

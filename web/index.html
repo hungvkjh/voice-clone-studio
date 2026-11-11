@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Voice-Clone Studio — Nhân bản giọng</title>
+<style>
+  :root{
+    --bg:#0e1117; --panel:#161b22; --panel2:#1c2230; --line:#2a3240;
+    --txt:#e6edf3; --muted:#8b98a9; --accent:#7c5cff; --accent2:#00d4a0;
+    --danger:#ff5c7c; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,Roboto,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 20% -10%,#1b2030,#0e1117);
+    color:var(--txt);min-height:100vh;padding:28px 16px 60px}
+  .wrap{max-width:860px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  h1 .dot{width:12px;height:12px;border-radius:50%;background:var(--accent2);
+    box-shadow:0 0 12px var(--accent2)}
+  .sub{color:var(--muted);margin:0 0 22px;font-size:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;margin-bottom:18px}
+  label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px;font-weight:600}
+  textarea,select,input[type=text]{width:100%;background:var(--panel2);color:var(--txt);
+    border:1px solid var(--line);border-radius:10px;padding:12px;font-size:15px;
+    font-family:inherit;outline:none}
+  textarea{min-height:120px;resize:vertical;line-height:1.5}
+  textarea:focus,select:focus,input:focus{border-color:var(--accent)}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .row > div{flex:1;min-width:150px}
+  .sliders{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:4px}
+  @media(max-width:560px){.sliders{grid-template-columns:1fr}}
+  .slider label{display:flex;justify-content:space-between}
+  .slider label b{color:var(--accent2);font-weight:700}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .opts{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:16px}
+  .opts label{margin:0;color:var(--txt);display:flex;align-items:center;gap:7px;cursor:pointer}
+  .opts input{accent-color:var(--accent)}
+  button{background:var(--accent);color:#fff;border:0;border-radius:10px;
+    padding:13px 20px;font-size:15px;font-weight:700;cursor:pointer;transition:.15s}
+  button:hover{filter:brightness(1.1)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);
+    padding:9px 14px;font-size:13px;font-weight:600}
+  .primary{width:100%;margin-top:18px;padding:15px;font-size:16px}
+  .result{margin-top:16px;display:none}
+  .result.show{display:block}
+  audio{width:100%;margin-top:6px}
+  .dl{display:inline-block;margin-top:12px;background:var(--accent2);color:#06241c;
+    text-decoration:none;padding:11px 18px;border-radius:10px;font-weight:700}
+  .status{font-size:13px;color:var(--muted);margin-top:12px;min-height:18px}
+  .status.err{color:var(--danger)}
+  .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .hd h2{font-size:15px;margin:0}
+  details summary{cursor:pointer;color:var(--muted);font-size:14px;font-weight:600;
+    padding:6px 0;user-select:none}
+  .up-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media(max-width:560px){.up-grid{grid-template-columns:1fr}}
+  .hist{list-style:none;padding:0;margin:10px 0 0;font-size:13px}
+  .hist li{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:9px 0;border-top:1px solid var(--line)}
+  .hist a{color:var(--accent2);text-decoration:none}
+  .hist .mut{color:var(--muted)}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid #fff6;
+    border-top-color:#fff;border-radius:50%;animation:s .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="dot"></span>Voice-Clone Studio</h1>
+  <p class="sub">Nhân bản chất giọng từ clip mẫu (F5-TTS). Nhập văn bản, chọn giọng, chỉnh giọng điệu → nghe & tải về.</p>
+
+  <div class="card">
+    <label for="text">Văn bản cần đọc</label>
+    <textarea id="text" placeholder="Dán đoạn văn tiếng Việt vào đây...">Căn nhà cuối ngõ đã bỏ hoang từ lâu. Vậy mà đêm nào, cửa sổ tầng hai vẫn sáng đèn.</textarea>
+
+    <div class="row" style="margin-top:16px">
+      <div>
+        <label for="voice">Giọng mẫu (clone)</label>
+        <select id="voice"></select>
+      </div>
+      <div style="flex:0 0 auto;display:flex;align-items:flex-end">
+        <button class="ghost" id="reloadVoices" type="button">↻ Tải lại</button>
+      </div>
+    </div>
+
+    <div class="sliders" style="margin-top:18px">
+      <div class="slider">
+        <label>Tốc độ <b id="speedV">0.90×</b></label>
+        <input type="range" id="speed" min="0.5" max="1.5" step="0.05" value="0.9">
+      </div>
+      <div class="slider">
+        <label>Cao độ <b id="pitchV">0 nửa cung</b></label>
+        <input type="range" id="pitch" min="-12" max="12" step="1" value="0">
+      </div>
+      <div class="slider">
+        <label>Âm lượng <b id="volV">0 dB</b></label>
+        <input type="range" id="volume" min="-20" max="20" step="1" value="0">
+      </div>
+      <div class="slider" style="display:flex;flex-direction:column;justify-content:center">
+        <div class="opts" style="margin:0">
+          <label><input type="checkbox" id="normalize"> Chuẩn hoá âm lượng (loudnorm)</label>
+        </div>
+        <div class="opts" style="margin-top:12px">
+          <label><input type="radio" name="fmt" value="mp3" checked> MP3</label>
+          <label><input type="radio" name="fmt" value="wav"> WAV</label>
+        </div>
+      </div>
+    </div>
+
+    <button class="primary" id="gen" type="button">🎙️ Tạo giọng</button>
+    <div class="status" id="status"></div>
+
+    <div class="result" id="result">
+      <audio id="player" controls></audio>
+      <a class="dl" id="download" download>⬇️ Tải file về</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>➕ Thêm giọng mẫu mới (upload)</summary>
+      <p class="sub" style="margin:12px 0 0">Tải lên clip 6–12 giây, sạch, một giọng (mp3/wav/m4a). Có thể để trống phần lời — hệ thống sẽ tự nhận dạng nếu cài faster-whisper.</p>
+      <div class="up-grid">
+        <div>
+          <label for="upName">Tên giọng</label>
+          <input type="text" id="upName" placeholder="vd: giong-hung">
+        </div>
+        <div>
+          <label for="upFile">File âm thanh mẫu</label>
+          <input type="file" id="upFile" accept="audio/*">
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <label for="upText">Lời thoại trong clip (tuỳ chọn — giúp clone chính xác hơn)</label>
+        <input type="text" id="upText" placeholder="Nội dung đúng như người trong clip nói...">
+      </div>
+      <button class="ghost" id="upBtn" type="button" style="margin-top:14px">Tải giọng lên</button>
+      <div class="status" id="upStatus"></div>
+    </details>
+  </div>
+
+  <div class="card">
+    <div class="hd"><h2>Lịch sử file đã tạo</h2><button class="ghost" id="reloadHist" type="button">↻</button></div>
+    <ul class="hist" id="hist"></ul>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmtVal = () => document.querySelector('input[name=fmt]:checked').value;
+
+// live slider labels
+$('speed').oninput = e => $('speedV').textContent = (+e.target.value).toFixed(2)+'×';
+$('pitch').oninput = e => $('pitchV').textContent = (e.target.value>0?'+':'')+e.target.value+' nửa cung';
+$('volume').oninput = e => $('volV').textContent = (e.target.value>0?'+':'')+e.target.value+' dB';
+
+async function loadVoices(){
+  try{
+    const vs = await (await fetch('/voices')).json();
+    const sel = $('voice'); const cur = sel.value;
+    sel.innerHTML = '';
+    vs.forEach(v=>{
+      const o = document.createElement('option');
+      o.value = v.name; o.textContent = v.name + (v.hasText?'':'  (chưa có lời)');
+      sel.appendChild(o);
+    });
+    if(cur) sel.value = cur;
+  }catch(e){ /* server maybe still warming up */ }
+}
+
+async function loadHist(){
+  try{
+    const items = await (await fetch('/outputs')).json();
+    const ul = $('hist'); ul.innerHTML='';
+    if(!items.length){ ul.innerHTML='<li class="mut">Chưa có file nào.</li>'; return; }
+    items.forEach(it=>{
+      const li=document.createElement('li');
+      const kb=(it.size/1024).toFixed(0);
+      const d=new Date(it.mtime*1000).toLocaleString('vi-VN');
+      li.innerHTML=`<a href="/output/${encodeURIComponent(it.file)}">${it.file}</a>`+
+                   `<span class="mut">${kb} KB · ${d}</span>`;
+      ul.appendChild(li);
+    });
+  }catch(e){}
+}
+
+$('gen').onclick = async () => {
+  const text = $('text').value.trim();
+  if(!text){ setStatus('status','Hãy nhập văn bản.',true); return; }
+  const body = {
+    text,
+    voice: $('voice').value,
+    speed: parseFloat($('speed').value),
+    pitch: parseFloat($('pitch').value),
+    volume: parseFloat($('volume').value),
+    normalize: $('normalize').checked,
+    format: fmtVal(),
+  };
+  $('gen').disabled = true;
+  setStatus('status','<span class="spin"></span>Đang tổng hợp giọng... (câu đầu có thể hơi lâu)');
+  $('result').classList.remove('show');
+  try{
+    const res = await fetch('/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok){ const j=await res.json().catch(()=>({error:res.statusText})); throw new Error(j.error||'lỗi'); }
+    const fn = res.headers.get('X-Output-File') || ('voice.'+body.format);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    $('player').src = url;
+    const dl = $('download'); dl.href = url; dl.download = fn;
+    $('result').classList.add('show');
+    $('player').play().catch(()=>{});
+    setStatus('status','Xong ✓  ('+fn+')');
+    loadHist();
+  }catch(e){ setStatus('status','Lỗi: '+e.message,true); }
+  finally{ $('gen').disabled = false; }
+};
+
+$('upBtn').onclick = async () => {
+  const name = $('upName').value.trim();
+  const file = $('upFile').files[0];
+  const text = $('upText').value.trim();
+  if(!name){ setStatus('upStatus','Nhập tên giọng.',true); return; }
+  if(!file){ setStatus('upStatus','Chọn file âm thanh.',true); return; }
+  $('upBtn').disabled = true;
+  setStatus('upStatus','<span class="spin"></span>Đang xử lý clip mẫu...');
+  try{
+    const buf = await file.arrayBuffer();
+    const q = '?name='+encodeURIComponent(name)+'&text='+encodeURIComponent(text);
+    const res = await fetch('/voices'+q,{method:'POST',headers:{'Content-Type':'application/octet-stream'},body:buf});
+    const j = await res.json();
+    if(!res.ok) throw new Error(j.error||'lỗi');
+    setStatus('upStatus','Đã thêm giọng "'+j.name+'"'+(j.hasText?' (có lời)':' (chưa có lời — nên nhập lời thoại)'));
+    await loadVoices();
+    $('voice').value = j.name;
+  }catch(e){ setStatus('upStatus','Lỗi: '+e.message,true); }
+  finally{ $('upBtn').disabled = false; }
+};
+
+function setStatus(id,msg,err){ const el=$(id); el.innerHTML=msg; el.classList.toggle('err',!!err); }
+
+$('reloadVoices').onclick = loadVoices;
+$('reloadHist').onclick = loadHist;
+loadVoices(); loadHist();
+</script>
+</body>
+</html>
